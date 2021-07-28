@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  package="com.crossboard">
+  package="project.personal.knmn2000">
 
     <uses-permission android:name="android.permission.INTERNET" />
 

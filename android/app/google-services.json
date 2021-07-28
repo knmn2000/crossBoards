@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "697751841375",
+    "project_id": "crossboards",
+    "storage_bucket": "crossboards.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:697751841375:android:3b21e1e623544cdb2fc9ea",
+        "android_client_info": {
+          "package_name": "project.personal.knmn2000"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "697751841375-615ts0b3dng6l883n9khof9i5hrjtdhb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "project.personal.knmn2000",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "697751841375-mu1jh3fchr1668mode2epvf8vcileja2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBgpPqQ-4qZmihzKv2rFzl5vwqb7UuyiLY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "697751841375-mu1jh3fchr1668mode2epvf8vcileja2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

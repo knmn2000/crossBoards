@@ -1,4 +1,4 @@
-package com.crossboard;
+package project.personal.knmn2000;
 
 import com.facebook.react.ReactActivity;
 
