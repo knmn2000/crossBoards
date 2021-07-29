@@ -1,33 +1,13 @@
 /* eslint-disable prettier/prettier */
 import React, {useCallback, useEffect, useState} from 'react';
-import {
-  Button,
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  useColorScheme,
-  View,
-} from 'react-native';
-
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import {Button, StyleSheet, Text, TextInput, View, Alert} from 'react-native';
+import Clipboard from '@react-native-community/clipboard';
 // import {Icon} from 'react-native-elements';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import database from '@react-native-firebase/database';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import {
   GoogleSignin,
-  GoogleSigninButton,
   statusCodes,
 } from '@react-native-google-signin/google-signin';
 
@@ -50,9 +30,29 @@ const styles = StyleSheet.create({
   navText: {
     fontSize: 30,
     fontWeight: 'bold',
+    flex: 10,
+    textAlign: 'center',
+    marginLeft: 50,
   },
   textInput: {
     height: 150,
+  },
+  navBox: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  copyPaste: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  copyPasteBtn: {
+    flex: 1,
+    padding: 2,
+    margin: 5,
+  },
+  clearBtn: {
+    padding: 5,
   },
   textComp: {
     color: 'black',
@@ -73,6 +73,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   toggleLogin: {
+    flex: 1,
     marginRight: 12,
   },
 });
@@ -85,8 +86,6 @@ const App = () => {
   const [user, setUser] = useState();
   const [text, setText] = useState();
 
-  // Handle user state changes
-
   function onAuthStateChanged(user) {
     setUser(user);
     if (initializing) {
@@ -97,35 +96,44 @@ const App = () => {
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
     return subscriber; // unsubscribe on unmount
   });
+  useEffect(() => {
+    if (user) {
+      firestore()
+        .collection('users')
+        .doc(user.uid)
+        .onSnapshot(doc => {
+          if (doc) {
+            setText(doc.data().clip);
+          }
+        });
+    }
+  }, [user]);
 
   const signIn = async () => {
     try {
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
-      const userId = userInfo.user.id;
-      database()
-        .ref(`/users/${userId}`)
-        .on('value', snapshot => {
-          console.log('data ', snapshot.val());
-        });
       const googleCredential = auth.GoogleAuthProvider.credential(
         userInfo.idToken,
       );
       auth().signInWithCredential(googleCredential);
+      Alert.alert('Alert', 'Signed in!', [
+        {
+          text: 'Signed in!',
+          onPress: () => console.log('close'),
+          style: 'default',
+        },
+      ]);
       return;
     } catch (error) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        // user cancelled the login flow
         console.log(error);
       } else if (error.code === statusCodes.IN_PROGRESS) {
-        // operation (e.g. sign in) is in progress already
         console.log(error);
       } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        // play services not available or outdated
         console.log(error);
       } else {
         console.log(error);
-        // some other error happened
       }
     }
   };
@@ -136,33 +144,97 @@ const App = () => {
         setUser({user: null});
         await GoogleSignin.revokeAccess();
         await GoogleSignin.signOut();
-        console.log('signedout');
       });
+    Alert.alert('Alert', 'Signed out!', [
+      {
+        text: 'Signed out!',
+        onPress: () => console.log('close'),
+        style: 'default',
+      },
+    ]);
   };
-  const updateBoard = () => {
-    firestore().collection('users').doc(user.uid).set({
-      clip: text,
-    });
-    console.log(user.uid);
+  const updateBoard = useCallback(async () => {
+    if (text.length < 1) {
+      await Clipboard.getString().then(clip => {
+        if (user) {
+          firestore().collection('users').doc(user.uid).set({
+            clip: clip,
+          });
+        }
+      });
+    } else {
+      if (user) {
+        firestore().collection('users').doc(user.uid).set({
+          clip: text,
+        });
+      }
+    }
+  }, [text, user]);
+
+  useEffect(() => {
+    async function pasteText() {
+      await Clipboard.getString()
+        .then(clip => {
+          if (clip === text) {
+            updateBoard();
+          }
+        })
+        .catch(err => console.log(err));
+    }
+    pasteText();
+  }, [text, updateBoard]);
+  const handleText = txt => {
+    setText(txt);
+  };
+  const copyToClipboard = () => {
+    if (text.length < 1) {
+      Alert.alert('Error', 'Text Field empty!', [
+        {
+          text: 'OK',
+          onPress: () => console.log('close'),
+          style: 'default',
+        },
+      ]);
+    }
+    Clipboard.setString(text);
+  };
+  const clearBoard = () => {
+    setText('');
   };
   return (
     <View style={styles.body}>
       <View style={styles.nav}>
-        <Text style={styles.navText}>CrossBoards</Text>
-        <Icon style={styles.toggleLogin} name="login" size={30} color="black" />
+        <View style={styles.navBox}>
+          <Text style={styles.navText}>CrossBoards</Text>
+          <Icon
+            style={styles.toggleLogin}
+            name={user ? 'logout' : 'login'}
+            size={30}
+            color="black"
+            onPress={user ? signOut : signIn}
+          />
+        </View>
       </View>
       <View style={styles.textInput}>
-        <Text style={styles.textInputLabel}>PASTE</Text>
+        <Text style={styles.textInputLabel}>Copy/Paste here :</Text>
         <TextInput
           style={styles.textComp}
           placeholder="paste"
-          onChangeText={t => setText(t)}
+          onChangeText={handleText}
+          value={text}
         />
         <View style={styles.inputButton}>
-          {/* <Button title="sign in" color="red" onPress={() => onGoogle} /> */}
-          <GoogleSigninButton onPress={signIn} />
-          <Button onPress={signOut} title="signout" />
-          <Button onPress={updateBoard} title="COPY" />
+          <View style={styles.copyPaste}>
+            <View style={styles.copyPasteBtn}>
+              <Button onPress={copyToClipboard} title="Copy" />
+            </View>
+            <View style={styles.copyPasteBtn}>
+              <Button onPress={updateBoard} title="Paste" />
+            </View>
+          </View>
+          <View style={styles.clearBtn}>
+            <Button onPress={clearBoard} color="red" title="Clear" />
+          </View>
         </View>
       </View>
       <View />
