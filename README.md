@@ -16,4 +16,4 @@ Clipboard across devices
 
 ### PRs welcome 
 
-This is my first time with react native and I'll any and all help I can get with this project.
+This is my first time with react native and I'll take any and all help I can get with this project.
